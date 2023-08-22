@@ -1,0 +1,51 @@
+version: '3'
+
+services:
+  database:
+    image: mariadb:10
+    networks:
+      - drupal-net
+    environment:
+      MYSQL_DATABASE: drupal
+      MYSQL_USER: drupal
+      MYSQL_PASSWORD: drupal
+      MYSQL_ROOT_PASSWORD: drupal
+
+  drupal:
+    build: .
+    extends:
+      file: docker-compose.drupal-config.yml
+      service: common
+    ports:
+      - 8080:80
+
+  clear-cache:
+    profiles: ["tools"]
+    extends:
+      file: docker-compose.drupal-config.yml
+      service: common
+    entrypoint: bash -c "drush cache:rebuild"
+
+  export-config:
+    profiles: ["tools"]
+    extends:
+      file: docker-compose.drupal-config.yml
+      service: common
+    entrypoint: bash -c "drush config:export -y"
+
+  import-config:
+    profiles: ["tools"]
+    extends:
+      file: docker-compose.drupal-config.yml
+      service: common
+    entrypoint: bash -c "drush config:import -y"
+
+  install-site:
+    profiles: ["tools"]
+    extends:
+      file: docker-compose.drupal-config.yml
+      service: common
+    entrypoint: bash -c "drush site:install minimal --existing-config --account-pass=root -y"
+
+networks:
+  drupal-net:
